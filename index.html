@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Bahasa Indonesia - Kelas 3 SD</title>
+    
+    <!-- Menggunakan font ceria untuk anak-anak -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS untuk styling responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Konfigurasi Tailwind untuk warna dan font kustom -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Baloo 2"', 'sans-serif'],
+                    },
+                    colors: {
+                        'edu-blue': '#4facfe',
+                        'edu-cyan': '#00f2fe',
+                        'edu-yellow': '#ffb703',
+                        'edu-orange': '#fb8500',
+                        'edu-green': '#8ac926',
+                        'edu-red': '#ff595e',
+                        'edu-purple': '#6a4c93',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: #333;
+        }
+
+        /* Glassmorphism effect */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 4px solid white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .btn-bubbly {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 6px 0px rgba(0,0,0,0.15);
+        }
+
+        .btn-bubbly:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0px rgba(0,0,0,0.15);
+        }
+
+        .bounce-anim {
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+
+        .player-turn-active {
+            transform: scale(1.1);
+            border: 4px solid #ffb703;
+            box-shadow: 0 0 15px rgba(255, 183, 3, 0.6);
+            z-index: 10;
+        }
+        
+        .correct-answer {
+            background-color: #8ac926 !important;
+            color: white !important;
+            border-color: #5c8a16 !important;
+        }
+
+        .wrong-answer {
+            background-color: #ff595e !important;
+            color: white !important;
+            border-color: #b5171e !important;
+        }
+
+        /* Animasi confetti sederhana */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 relative">
+
+    <!-- Modal Peringatan Kustom (Pengganti Alert) -->
+    <div id="customAlert" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel rounded-3xl p-6 md:p-8 max-w-sm w-full text-center transform transition-all scale-95 opacity-0" id="alertBox">
+            <div class="text-edu-red text-5xl mb-4">
+                <i class="fas fa-exclamation-circle bounce-anim"></i>
+            </div>
+            <h3 class="text-2xl font-bold mb-2">Ups!</h3>
+            <p id="alertMessage" class="text-lg mb-6 text-gray-700">Pesan kesalahan di sini.</p>
+            <button onclick="closeAlert()" class="bg-edu-blue text-white py-2 px-6 rounded-2xl text-xl font-bold btn-bubbly hover:bg-blue-500 w-full">
+                Oke, Mengerti!
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="w-full max-w-4xl relative">
+        
+        <!-- SCREEN 1: LOGIN / SETUP -->
+        <div id="loginScreen" class="glass-panel rounded-[2rem] p-6 md:p-10 w-full animate-fade-in block">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-edu-purple mb-2" style="text-shadow: 2px 2px 0px rgba(255,255,255,0.7);">
+                    <i class="fas fa-book-open mr-2 text-edu-yellow"></i>Petualangan Kata
+                </h1>
+                <p class="text-lg md:text-xl text-gray-600 font-semibold">Game Bahasa Indonesia Kelas 3 SD</p>
+            </div>
+
+            <div class="bg-blue-50 rounded-2xl p-6 border-2 border-blue-100">
+                <h2 class="text-2xl font-bold text-center mb-4 text-gray-700">Berapa Anak yang Mau Bermain?</h2>
+                
+                <div class="flex justify-center gap-4 mb-8">
+                    <button onclick="setPlayerCount(1)" id="btn1P" class="player-btn bg-white border-4 border-gray-200 text-gray-500 rounded-2xl py-3 px-6 text-2xl font-bold btn-bubbly hover:border-edu-blue hover:text-edu-blue transition">
+                        <i class="fas fa-user mb-1 block"></i> 1
+                    </button>
+                    <button onclick="setPlayerCount(2)" id="btn2P" class="player-btn bg-white border-4 border-gray-200 text-gray-500 rounded-2xl py-3 px-6 text-2xl font-bold btn-bubbly hover:border-edu-green hover:text-edu-green transition">
+                        <i class="fas fa-user-friends mb-1 block"></i> 2
+                    </button>
+                    <button onclick="setPlayerCount(3)" id="btn3P" class="player-btn bg-white border-4 border-gray-200 text-gray-500 rounded-2xl py-3 px-6 text-2xl font-bold btn-bubbly hover:border-edu-orange hover:text-edu-orange transition">
+                        <i class="fas fa-users mb-1 block"></i> 3
+                    </button>
+                </div>
+
+                <div id="playerInputs" class="space-y-4 mb-8 hidden">
+                    <!-- Input nama akan di-generate oleh JS -->
+                </div>
+
+                <div class="text-center">
+                    <button onclick="startGame()" id="btnStart" class="bg-edu-green text-white border-b-4 border-green-700 rounded-2xl py-3 px-10 text-2xl font-bold btn-bubbly hidden w-full md:w-auto">
+                        <i class="fas fa-play mr-2"></i> Mulai Bermain!
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: GAME BOARD -->
+        <div id="gameScreen" class="hidden w-full">
+            
+            <!-- Header Bar -->
+            <div class="flex justify-between items-center mb-4">
+                <button onclick="confirmExit()" class="bg-white text-edu-red py-2 px-4 rounded-xl font-bold shadow-md hover:bg-gray-100 transition flex items-center gap-2">
+                    <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Keluar</span>
+                </button>
+                <div class="bg-white py-2 px-6 rounded-xl font-bold shadow-md text-edu-purple text-lg md:text-xl">
+                    <i class="fas fa-star text-edu-yellow mr-1"></i> Soal <span id="currentQNum">1</span> / <span id="totalQNum">10</span>
+                </div>
+            </div>
+
+            <!-- Score Board (Dinamis) -->
+            <div id="scoreBoard" class="flex justify-center gap-2 md:gap-6 mb-6 flex-wrap">
+                <!-- Data pemain masuk ke sini -->
+            </div>
+
+            <!-- Area Pertanyaan -->
+            <div class="glass-panel rounded-[2rem] p-6 md:p-10 w-full mb-6">
+                <div class="text-center mb-8">
+                    <h2 id="questionText" class="text-2xl md:text-4xl font-bold text-gray-800 leading-snug">
+                        <!-- Pertanyaan di sini -->
+                    </h2>
+                </div>
+
+                <!-- Pilihan Jawaban -->
+                <div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <!-- Tombol pilihan masuk ke sini -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: RESULT -->
+        <div id="resultScreen" class="glass-panel rounded-[2rem] p-6 md:p-10 w-full hidden text-center relative overflow-hidden">
+            <div id="confettiContainer" class="absolute inset-0 pointer-events-none"></div>
+            
+            <h1 class="text-4xl md:text-5xl font-extrabold text-edu-purple mb-6" style="text-shadow: 2px 2px 0px rgba(255,255,255,0.7);">
+                <i class="fas fa-trophy text-edu-yellow mr-2 bounce-anim"></i> Permainan Selesai!
+            </h1>
+            
+            <div id="winnerAnnouncement" class="text-2xl md:text-3xl font-bold text-gray-800 mb-8 bg-yellow-100 p-6 rounded-2xl border-4 border-yellow-300">
+                <!-- Pengumuman Pemenang -->
+            </div>
+
+            <div id="finalScores" class="space-y-4 mb-8 max-w-md mx-auto">
+                <!-- Daftar Skor Akhir -->
+            </div>
+
+            <div class="flex justify-center gap-4">
+                <button onclick="resetGame()" class="bg-edu-blue text-white border-b-4 border-blue-700 rounded-2xl py-3 px-8 text-xl font-bold btn-bubbly w-full md:w-auto flex items-center justify-center gap-2">
+                    <i class="fas fa-home"></i> Kembali ke Menu
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Database Pertanyaan (Kelas 3 SD)
+        const bankSoal = [
+            { q: "Lawan kata (antonim) dari kata 'Rajin' adalah...", options: ["Malas", "Pintar", "Bodoh", "Cepat"], answer: 0 },
+            { q: "Persamaan kata (sinonim) dari 'Pintar' adalah...", options: ["Bodoh", "Malas", "Pandai", "Sombong"], answer: 2 },
+            { q: "Tempat berhentinya kereta api disebut...", options: ["Terminal", "Pelabuhan", "Bandara", "Stasiun"], answer: 3 },
+            { q: "Kata tanya yang tepat untuk menanyakan tempat adalah...", options: ["Siapa", "Di mana", "Kapan", "Mengapa"], answer: 1 },
+            { q: "Kalimat yang diakhiri dengan tanda tanya (?) disebut kalimat...", options: ["Perintah", "Seruan", "Berita", "Tanya"], answer: 3 },
+            { q: "Budi sedang membaca buku ___ perpustakaan. Kata depan yang tepat adalah...", options: ["ke", "dari", "di", "pada"], answer: 2 },
+            { q: "Ayah sedang mencuci mobil di halaman. Kata kerja pada kalimat tersebut adalah...", options: ["Ayah", "Mencuci", "Mobil", "Halaman"], answer: 1 },
+            { q: "Huruf kapital digunakan pada...", options: ["Awal kalimat", "Akhir kalimat", "Tengah kata", "Kata kerja"], answer: 0 },
+            { q: "Bunga mawar itu sangat ___. Kata sifat yang tepat adalah...", options: ["Cepat", "Harum", "Tinggi", "Lari"], answer: 1 },
+            { q: "Orang yang mengemudikan pesawat terbang disebut...", options: ["Masinis", "Sopir", "Pilot", "Nahkoda"], answer: 2 },
+            { q: "Hewan yang memiliki belalai panjang adalah...", options: ["Jerapah", "Gajah", "Harimau", "Singa"], answer: 1 },
+            { q: "Lawan kata dari 'Siang' adalah...", options: ["Pagi", "Malam", "Sore", "Subuh"], answer: 1 },
+            { q: "___ yang menemani kamu belajar tadi malam? Kata tanya yang tepat adalah...", options: ["Kapan", "Berapa", "Di mana", "Siapa"], answer: 3 },
+            { q: "Buku itu merupakan karangan dari Andrea Hirata. Andrea Hirata disebut sebagai...", options: ["Pembaca", "Penerbit", "Penulis", "Penjual"], answer: 2 },
+            { q: "Matahari terbit pada waktu...", options: ["Malam", "Siang", "Sore", "Pagi"], answer: 3 }
+        ];
+
+        // State Permainan
+        let numPlayers = 0;
+        let players = [];
+        let currentQuestions = [];
+        let currentQuestionIdx = 0;
+        let currentPlayerTurn = 0;
+        let isAnswering = false;
+
+        // Warna tema untuk pemain
+        const playerColors = [
+            { bg: 'bg-edu-blue', border: 'border-blue-500', text: 'text-blue-700', light: 'bg-blue-100' },
+            { bg: 'bg-edu-green', border: 'border-green-500', text: 'text-green-700', light: 'bg-green-100' },
+            { bg: 'bg-edu-orange', border: 'border-orange-500', text: 'text-orange-700', light: 'bg-orange-100' }
+        ];
+
+        // Fungsi Custom Alert
+        function showAlert(msg) {
+            document.getElementById('alertMessage').innerText = msg;
+            const alertModal = document.getElementById('customAlert');
+            const alertBox = document.getElementById('alertBox');
+            
+            alertModal.classList.remove('hidden');
+            // Sedikit delay agar transisi terlihat
+            setTimeout(() => {
+                alertBox.classList.remove('scale-95', 'opacity-0');
+                alertBox.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeAlert() {
+            const alertModal = document.getElementById('customAlert');
+            const alertBox = document.getElementById('alertBox');
+            
+            alertBox.classList.remove('scale-100', 'opacity-100');
+            alertBox.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                alertModal.classList.add('hidden');
+            }, 300); // Sesuai dengan durasi transition tailwind
+        }
+
+        function setPlayerCount(num) {
+            numPlayers = num;
+            
+            // Reset button styles
+            document.querySelectorAll('.player-btn').forEach(btn => {
+                btn.classList.remove('border-edu-blue', 'text-edu-blue', 'border-edu-green', 'text-edu-green', 'border-edu-orange', 'text-edu-orange');
+                btn.classList.add('border-gray-200', 'text-gray-500');
+            });
+
+            // Set active button style
+            const activeBtn = document.getElementById(`btn${num}P`);
+            if(num === 1) activeBtn.classList.replace('border-gray-200', 'border-edu-blue');
+            if(num === 1) activeBtn.classList.replace('text-gray-500', 'text-edu-blue');
+            if(num === 2) activeBtn.classList.replace('border-gray-200', 'border-edu-green');
+            if(num === 2) activeBtn.classList.replace('text-gray-500', 'text-edu-green');
+            if(num === 3) activeBtn.classList.replace('border-gray-200', 'border-edu-orange');
+            if(num === 3) activeBtn.classList.replace('text-gray-500', 'text-edu-orange');
+
+            // Generate Input Fields
+            const inputsContainer = document.getElementById('playerInputs');
+            inputsContainer.innerHTML = '';
+            
+            for(let i=0; i<num; i++) {
+                const colors = playerColors[i];
+                inputsContainer.innerHTML += `
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-child ${colors.text} text-xl"></i>
+                        </div>
+                        <input type="text" id="playerName${i}" placeholder="Nama Pemain ${i+1}" 
+                            class="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-400 outline-none text-lg font-bold transition-colors shadow-inner" maxlength="12">
+                    </div>
+                `;
+            }
+
+            inputsContainer.classList.remove('hidden');
+            document.getElementById('btnStart').classList.remove('hidden');
+        }
+
+        function startGame() {
+            players = [];
+            for(let i=0; i<numPlayers; i++) {
+                let name = document.getElementById(`playerName${i}`).value.trim();
+                if(name === "") {
+                    showAlert(`Tolong isi nama untuk Pemain ${i+1} ya!`);
+                    return;
+                }
+                players.push({
+                    name: name,
+                    score: 0,
+                    color: playerColors[i]
+                });
+            }
+
+            // Pilih dan acak 10 soal
+            currentQuestions = [...bankSoal].sort(() => 0.5 - Math.random()).slice(0, 10);
+            currentQuestionIdx = 0;
+            currentPlayerTurn = 0;
+            isAnswering = false;
+
+            // Update UI
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('totalQNum').innerText = currentQuestions.length;
+
+            renderScoreBoard();
+            loadQuestion();
+        }
+
+        function confirmExit() {
+            // Kita gunakan custom modal alih-alih confirm
+            document.getElementById('alertMessage').innerText = "Yakin ingin keluar? Nilai akan hilang lho.";
+            const alertModal = document.getElementById('customAlert');
+            const alertBox = document.getElementById('alertBox');
+            
+            alertModal.classList.remove('hidden');
+            setTimeout(() => {
+                alertBox.classList.remove('scale-95', 'opacity-0');
+                alertBox.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            // Ganti tombol OK dengan Yes/No khusus untuk fungsi ini
+            const btnContainer = alertBox.querySelector('button').parentElement;
+            btnContainer.innerHTML = `
+                <div class="text-edu-red text-5xl mb-4"><i class="fas fa-question-circle bounce-anim"></i></div>
+                <h3 class="text-2xl font-bold mb-2">Keluar?</h3>
+                <p class="text-lg mb-6 text-gray-700">Yakin ingin kembali ke menu awal?</p>
+                <div class="flex gap-4">
+                    <button onclick="resetGame(); closeAlertSetup();" class="bg-edu-red text-white py-2 px-4 rounded-2xl text-lg font-bold btn-bubbly w-full">Ya, Keluar</button>
+                    <button onclick="closeAlertSetup()" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-2xl text-lg font-bold btn-bubbly w-full">Batal</button>
+                </div>
+            `;
+        }
+
+        function closeAlertSetup() {
+            closeAlert();
+            // Kembalikan struktur tombol alert ke default setelah animasi selesai
+            setTimeout(() => {
+                const alertBox = document.getElementById('alertBox');
+                alertBox.innerHTML = `
+                    <div class="text-edu-red text-5xl mb-4"><i class="fas fa-exclamation-circle bounce-anim"></i></div>
+                    <h3 class="text-2xl font-bold mb-2">Ups!</h3>
+                    <p id="alertMessage" class="text-lg mb-6 text-gray-700">Pesan kesalahan di sini.</p>
+                    <button onclick="closeAlert()" class="bg-edu-blue text-white py-2 px-6 rounded-2xl text-xl font-bold btn-bubbly hover:bg-blue-500 w-full">Oke, Mengerti!</button>
+                `;
+            }, 300);
+        }
+
+        function renderScoreBoard() {
+            const sb = document.getElementById('scoreBoard');
+            sb.innerHTML = '';
+            
+            players.forEach((p, index) => {
+                let activeClass = (index === currentPlayerTurn) ? 'player-turn-active' : 'opacity-80 scale-95';
+                let tagText = (index === currentPlayerTurn) ? 'Giliranmu!' : 'Menunggu...';
+                
+                if(numPlayers === 1) {
+                    activeClass = 'player-turn-active'; // Selalu aktif jika 1 pemain
+                    tagText = 'Pemain';
+                }
+
+                sb.innerHTML += `
+                    <div class="bg-white rounded-2xl p-3 md:p-4 flex flex-col items-center min-w-[120px] transition-all duration-300 ${activeClass} border-b-4 ${p.color.border}">
+                        <div class="${p.color.bg} text-white text-xs font-bold px-2 py-1 rounded-full mb-2 uppercase tracking-wide w-full text-center">
+                            ${tagText}
+                        </div>
+                        <i class="fas fa-smile text-3xl ${p.color.text} mb-1"></i>
+                        <span class="font-bold text-gray-800 truncate w-full text-center text-lg">${p.name}</span>
+                        <div class="bg-gray-100 rounded-lg px-4 py-1 mt-2 font-black text-xl text-gray-700">
+                            ${p.score} <i class="fas fa-star text-edu-yellow text-sm"></i>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function loadQuestion() {
+            isAnswering = false;
+            const qObj = currentQuestions[currentQuestionIdx];
+            document.getElementById('currentQNum').innerText = currentQuestionIdx + 1;
+            
+            // Render Pertanyaan
+            // Jika multiplayer, beri tahu nama siapa yang harus menjawab
+            let prefix = "";
+            if(numPlayers > 1) {
+                prefix = `<span class="${players[currentPlayerTurn].color.text} bg-${players[currentPlayerTurn].color.text.split('-')[1]}-100 px-3 py-1 rounded-xl text-xl md:text-2xl mr-2"><i class="fas fa-bullhorn mr-1"></i> ${players[currentPlayerTurn].name},</span><br>`;
+            }
+            
+            document.getElementById('questionText').innerHTML = prefix + qObj.q;
+
+            // Render Pilihan
+            const optContainer = document.getElementById('optionsContainer');
+            optContainer.innerHTML = '';
+
+            // Acak urutan tombol pilihan
+            let optionsArray = qObj.options.map((opt, i) => ({text: opt, originalIndex: i}));
+            optionsArray.sort(() => 0.5 - Math.random());
+
+            const btnColors = [
+                'bg-white border-b-4 border-blue-200 hover:border-blue-400 text-blue-900',
+                'bg-white border-b-4 border-green-200 hover:border-green-400 text-green-900',
+                'bg-white border-b-4 border-yellow-200 hover:border-yellow-400 text-yellow-900',
+                'bg-white border-b-4 border-red-200 hover:border-red-400 text-red-900'
+            ];
+
+            optionsArray.forEach((opt, index) => {
+                const btnObj = document.createElement('button');
+                btnObj.className = `p-4 md:p-6 rounded-2xl text-xl md:text-2xl font-bold btn-bubbly transition-all ${btnColors[index % 4]} flex items-center justify-center min-h-[80px] shadow-sm`;
+                btnObj.innerHTML = opt.text;
+                btnObj.onclick = () => selectAnswer(btnObj, opt.originalIndex, qObj.answer);
+                optContainer.appendChild(btnObj);
+            });
+        }
+
+        function selectAnswer(btnElement, selectedIndex, correctIndex) {
+            if(isAnswering) return; // Cegah double click
+            isAnswering = true;
+
+            const isCorrect = (selectedIndex === correctIndex);
+            
+            // Visual feedback pada tombol
+            if(isCorrect) {
+                btnElement.classList.add('correct-answer', 'bounce-anim');
+                players[currentPlayerTurn].score += 10;
+                playAudio('correct'); // Placeholder suara
+            } else {
+                btnElement.classList.add('wrong-answer', 'shake');
+                playAudio('wrong');
+
+                // Tunjukkan yang benar
+                const allBtns = document.getElementById('optionsContainer').children;
+                for(let b of allBtns) {
+                    if(b.onclick.toString().includes(`, ${correctIndex},`)) {
+                        b.classList.add('border-green-500', 'border-4');
+                    }
+                }
+            }
+
+            // Update skor sementara
+            renderScoreBoard();
+
+            // Lanjut setelah jeda
+            setTimeout(() => {
+                if(numPlayers > 1) {
+                    currentPlayerTurn++;
+                    if(currentPlayerTurn >= numPlayers) {
+                        currentPlayerTurn = 0;
+                        currentQuestionIdx++;
+                    }
+                } else {
+                    currentQuestionIdx++;
+                }
+
+                if(currentQuestionIdx >= currentQuestions.length) {
+                    endGame();
+                } else {
+                    loadQuestion();
+                    renderScoreBoard(); // Update tampilan giliran
+                }
+            }, 1500);
+        }
+
+        function playAudio(type) {
+            // Simulasi tanpa file eksternal untuk menghindari error CORS / broken link
+            // Jika diperlukan bisa diganti menggunakan Web Audio API, tapi demi simplicity tidak digunakan disini.
+            console.log(`[Audio Play] ${type}`);
+        }
+
+        function endGame() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+
+            // Sort pemain berdasarkan skor tertinggi
+            let sortedPlayers = [...players].sort((a,b) => b.score - a.score);
+
+            const winnerDiv = document.getElementById('winnerAnnouncement');
+            const scoresDiv = document.getElementById('finalScores');
+            
+            if(numPlayers === 1) {
+                let stars = sortedPlayers[0].score / 10;
+                let message = stars === 10 ? "Luar Biasa Sempurna!" : (stars >= 7 ? "Kerja Bagus!" : "Terus Berlajar Ya!");
+                winnerDiv.innerHTML = `
+                    <div class="text-xl mb-2">Nilai Akhir:</div>
+                    <div class="text-6xl text-edu-blue font-black mb-2">${sortedPlayers[0].score}</div>
+                    <div class="text-edu-orange">${message}</div>
+                `;
+            } else {
+                // Handle seri (Draw)
+                if(sortedPlayers[0].score === sortedPlayers[1].score) {
+                    winnerDiv.innerHTML = `
+                        <div class="text-xl mb-2">Wah, Hasil Seri!</div>
+                        <div class="text-3xl text-edu-orange font-black">Permainan Berakhir Imbang!</div>
+                    `;
+                } else {
+                    winnerDiv.innerHTML = `
+                        <div class="text-xl mb-2">Pemenangnya Adalah...</div>
+                        <div class="text-5xl ${sortedPlayers[0].color.text} font-black mb-2 flex justify-center items-center gap-3">
+                            <i class="fas fa-crown text-edu-yellow"></i> ${sortedPlayers[0].name}
+                        </div>
+                        <div class="text-gray-600 text-lg">Skor: ${sortedPlayers[0].score}</div>
+                    `;
+                }
+            }
+
+            scoresDiv.innerHTML = '';
+            sortedPlayers.forEach((p, idx) => {
+                let medal = '';
+                if(idx === 0 && (numPlayers===1 || sortedPlayers[0].score !== sortedPlayers[1]?.score)) medal = '🥇';
+                else if(idx === 1) medal = '🥈';
+                else if(idx === 2) medal = '🥉';
+
+                scoresDiv.innerHTML += `
+                    <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border-2 border-gray-100">
+                        <div class="text-xl font-bold ${p.color.text} flex items-center gap-2">
+                            <span>${medal}</span> ${p.name}
+                        </div>
+                        <div class="text-xl font-black bg-gray-100 px-4 py-1 rounded-lg">
+                            ${p.score} <i class="fas fa-star text-edu-yellow text-sm"></i>
+                        </div>
+                    </div>
+                `;
+            });
+
+            createConfetti();
+        }
+
+        // Efek Confetti Sederhana menggunakan JS murni
+        function createConfetti() {
+            const container = document.getElementById('confettiContainer');
+            container.innerHTML = '';
+            const colors = ['#4facfe', '#00f2fe', '#ffb703', '#fb8500', '#8ac926', '#ff595e'];
+            
+            for(let i=0; i<50; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'absolute rounded-sm';
+                conf.style.width = Math.random() * 10 + 5 + 'px';
+                conf.style.height = Math.random() * 10 + 5 + 'px';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.left = Math.random() * 100 + '%';
+                conf.style.top = '-10px';
+                conf.style.opacity = Math.random() + 0.5;
+                conf.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                container.appendChild(conf);
+
+                animateConfetti(conf);
+            }
+        }
+
+        function animateConfetti(element) {
+            let pos = -10;
+            let rot = 0;
+            const speed = Math.random() * 3 + 2;
+            const rotSpeed = Math.random() * 5 - 2.5;
+
+            const interval = setInterval(() => {
+                pos += speed;
+                rot += rotSpeed;
+                element.style.top = pos + 'px';
+                element.style.transform = `rotate(${rot}deg)`;
+
+                if(pos > window.innerHeight) {
+                    clearInterval(interval);
+                    element.remove();
+                }
+            }, 20);
+        }
+
+        function resetGame() {
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            
+            // Reset state input
+            document.getElementById('playerInputs').classList.add('hidden');
+            document.getElementById('btnStart').classList.add('hidden');
+            document.querySelectorAll('.player-btn').forEach(btn => {
+                btn.classList.remove('border-edu-blue', 'text-edu-blue', 'border-edu-green', 'text-edu-green', 'border-edu-orange', 'text-edu-orange');
+                btn.classList.add('border-gray-200', 'text-gray-500');
+            });
+            numPlayers = 0;
+            players = [];
+        }
+
+        // Inisialisasi awal mencegah zoom saat double tap di mobile
+        document.addEventListener('dblclick', function(event) {
+            event.preventDefault();
+        }, { passive: false });
+
+    </script>
+</body>
+</html>
